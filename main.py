@@ -13,6 +13,8 @@ def store_locator():  # This can be improved to actually return a list of Domino
         print(address_type)
         if address_type in ['Apartment', 'Campus', 'Hotel']:
             suite_apt_num = pyip.inputNum(prompt="What is your suite or apartment number?:\t")
+        else:
+            suite_apt_num = 'N/A'
         street_address = pyip.inputStr(prompt="Please type your street address:\t")
         zip_code = pyip.inputNum(prompt="What is your zip code?: \t")
         city = pyip.inputStr(prompt="What city do you live in?: \t")
@@ -23,7 +25,7 @@ def store_locator():  # This can be improved to actually return a list of Domino
         state = pyip.inputStr(prompt="What state do you live in?: \t")
 
     ## In the future search the web for a list of dominoes stores close to the address.
-
+    return street_address,suite_apt_num,city, state, zip_code
 
 def pizza_builder():
     pizza_size = pyip.inputMenu(['Small - 10"', 'Medium - 12"', 'Large - 14"', 'X-Large - 16"'],
@@ -70,26 +72,81 @@ def pizza_builder():
         customer_non_meat_selection[topping_type] = topping_quantity
         another_topping = pyip.inputYesNo(prompt="Would you like to add another topping, yes or no?")
 
-
     customer_sides = []
-    another_side = 'yes':
+    another_side = 'yes'
     while another_side == 'yes':
         side_type = pyip.inputMenu(['Ranch', 'Garlic Dipping Sauce', 'Marinara Dipping Sauce', 'No side for me today.'],
-                                   prompt="What kind of side would you like?", numbered=True)
+                                   prompt="What kind of side would you like?\n", numbered=True)
         customer_sides.append(side_type)
+        another_side = pyip.inputYesNo('Would you like another side?')
         if side_type == 'No side for me today.':
-            break
+            another_side = 'no'
 
-    return pizza_size, crust_type, quantity, cheese_size, sauce_type, sauce_quantity, customer_meat_selection, \
-           customer_non_meat_selection, customer_sides
+    selected_pizza = pizza_size, crust_type, quantity, cheese_size, sauce_type, sauce_quantity, \
+                     customer_meat_selection, customer_non_meat_selection, customer_sides
 
-def  calculate_pizza_order():
-
-
+    return selected_pizza
 
 
+def calculate_pizza_order(pizza_tuple):  # Prices are arbitrary
+    running_cost = 0
 
+    cost_dict = {'Small - 10"': 7, 'Medium - 12"': 10, 'Large - 14"': 12, 'X-Large - 16"': 16,
+                 'Brooklyn Style - Hand stretched to be big, thin and perfectly foldable.': 2,
+                 'Hand Tossed - Garlic-seasoned crust with a rich buttery taste.': 0,
+                 'Crunchy Thin Crust - Thin enough for the optimum crispy to crunchy ratio and '
+                 'square cut to be perfectly shareable': 1,
+                 'Robust Inspired Tomato Sauce': 0, 'Hearty Marina Sauce': 0, 'Honey BBQ Sauce': 0,
+                 'Garlic Parmesan Sauce': 0, 'Alfredo Sauce': 1, 'Ranch': 0, 'Ham': .5, 'Beef': 1, 'Salami': 0,
+                 'Pepperoni': 0, 'Italian Sausage': 0.5, 'Premium Chicken': 0.5, 'Bacon': 0.5, 'Philly Steak': 1,
+                 'No meat please.': 0, 'Hot Buffalo Sauce': 0.2, 'Jalapeno Peppers': 0.2, 'Onions': 0.2,
+                 'Banana Peppers': 0.3, 'Diced Tomatoes': 0.1, 'Black Olives': 0.1, 'Mushrooms': 0.1, 'Pineapple': 0.3,
+                 'Shredded Provolone Cheese': 0.3, 'Cheddar Cheese': 0.1, 'Green Peppers': 0.2,
+                 'Spinach': 0.1, 'Roasted Red Peppers': 0.1, 'Feta Cheese': 0.3, 'Shredded Parmesan Asiago': 0.3,
+                 'No toppings for me thanks.': 0}
+
+    # Cheese quantity cost
+    if pizza_tuple[3] == 'Extra':
+        running_cost += 1
+    elif pizza_tuple[3] == 'Double':
+        running_cost += 2
+
+    # Sauce quantity cost
+    if pizza_tuple[5] == 'Extra':
+        running_cost += 1.5
+
+    # Side cost
+    for side in pizza_tuple[-1]:
+        if side == 'Ranch':
+            running_cost += 1.2
+        if side == 'Garlic Dipping Sauce':
+            running_cost += 1
+        if side == 'Marinara Dipping Sauce':
+            running_cost += 0.7
+
+    # Size and crust-type cost
+    for i in pizza_tuple:
+        for q in cost_dict.keys():
+            if i == q:
+                running_cost += cost_dict.get(q)
+
+    # Topping cost  --- extra multiplier is 1.5, double is 2
+    toppings = {}
+    for i in pizza_tuple:
+        if type(i) == type(cost_dict):
+            toppings.update(i)
+
+    for q in toppings:
+        if q in cost_dict.keys() and toppings.get(q) == 'Extra':
+            running_cost += cost_dict.get(q) * 1.5
+
+        elif q in cost_dict.keys() and toppings.get(q) == 'Double':
+            running_cost += cost_dict.get(q) * 2
+
+    # Calculate the cost of multiple pizza orders
+    return "Your total is $" + str(round(running_cost * pizza_tuple[2], 2))
 
 
 # run functions
-print(pizza_builder())
+print(store_locator())
+print(calculate_pizza_order(pizza_builder()))
